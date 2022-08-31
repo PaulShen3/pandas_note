@@ -1,0 +1,140 @@
+#首先说一下，这个文档是一些很乱七八糟的东西
+#包含了一些乱七八糟的pandas的使用
+#本来这个文档是在notepad++写的，所以也没有什么格式什么的
+#每次我pandas写不出的时候，我都会看看这个文档
+#但大部分情况下我还是会选择google一下
+
+
+数据分析整理
+#导入表格
+df = pd.read_csv("",index_col='索引')   #设置index_col可直接设置索引列
+
+Knowing_your_Data
+
+df.head()
+df.tail()
+df.info        #查看表字段
+df.describe()  #描述性统计
+df.describe(include='all') #查看完整描述性统计
+df.shape[0]  #查看有多少行
+df.shape[1]  #查看有多少列
+df.columns   #查看有哪些列
+df.index     #查看索引
+df.column_name.dtype  #查看某一字段
+df.dtypes
+df.Year = pd.to_datetime(pd.Year,format="%Y")  #将int64改成datetime64
+df.isnull().sum()  #查看是否有空值
+df.iloc[:,:] = np.nan  #把指定数据改成NaN
+df.column1.fillna(1,inplace=True)   #把表中的NaN值改成1
+df = df.set_index(drop=True)        #重新设置一列新的从0开始的索引
+df = df.set_index('column1',drop=True)  #把column1列作为索引列
+del df["column"]  #删除列
+df.rename(column = {'column1':'column11','column2','column22'},inplace=True)  #改列名
+df.columns = ['column1','column2','column3'] #直接给列改名
+df = df.dropna(axis=0,how='any')  #删除所有包含NaN的行
+df = df.dropna(axis=0,how='all')  #这一行所有数据都为NaN就删掉
+df = df.drop(df.columns[[0,3,6,8]],axis=1)  #删除第1，4，7，9列
+
+
+df.price = [float(value[1:-1]) for value in df.price] #通过将price从object改成float类型，可以把$和空格等符号删去
+
+
+Flitering & Sorting
+
+df.column_name.sum()   #某列求和
+c = (df['a'] * df['b']).sum()   #某两列相乘求和
+df.groupby('column_name').sum().sort_values(['column_name_2'],ascending=False).head(1)  #按照column_name分组看根据column_name_2看出现次数最多的标签的信息
+df.column_name.value_counts() #查看column_name字段每一类标签多少个
+df.column_name.value_counts().count() #查看column_name有多少不同的字段
+df.column_name.nunique()    #查看column_name有多少不同的字段
+df.loc[df['column_name']=='a','column_name'] = 'b'  #把某个字段中的某类标签a改为标签b
+df_new = df[(df.column_name =='a')&(df.quantity >1)&(df.条件三)]  #基于原表得到一个有以上三个条件的新
+df_new = df[['column1','column2','column3']]    #基于原表得到一个只包含123三列的新表
+df_new = df[df.column条件]  #基于原表得到新表
+df_new = df[(df["column1"]>a)|df["column2"]<b]  #基于原表，得到column1大于a或者column2小于b的新表
+#切片器
+df_new = df.loc[:,['column1','column2','column3']] #每一行都要，但只要指定列
+df_new = df.loc[['index1','index2','index3']:]     #每一列都要，但只要指定行（一定要是索引列才可以取！！！）
+df_new = df.loc[df.column_name.isin(['index1','index2','index3']),:]   #要index123行，每一列都要 
+ 
+Grouping
+
+df.groupby("column1").column2.mean()  #根据column1分组聚合看column2的均值
+df.groupby("column1").column2.describe()  #根据column1分组聚合看column2的描述性统计
+df.groupby("column1").mean()             #根据column1分组聚合看每一个标签的均值，这边也可以用median看中位数和
+df.groupby("column1").column2.agg(['mean','min','max'])  #根据column1分组，看column2的均值，最小值和最大值
+#按column1划分后看表的情况，column1有多少标签就会拆成多个表
+for name, group in df.groupby('column1'):
+    print("划分的特征值:",name)
+    print(group,'\n')
+
+
+Apply&map&applymap
+
+capitalizer = lambda x : x.capitalize()  #写一个函数使首字母大写
+df['column1'].apply(capitalizer)  #将column1列的数据首字母大写
+def function(x):
+	if  条件1：
+		return True
+	else:
+		return False
+df['new_column'] = df['判定列'].apply(function)
+df.apply(np.square)  #apply后面可以直接跟np.square
+df['gender'] = df['gender'].map({'男':1,'女':0})   #把gender列的男变成1，女变成0
+df.applymap()   #针对元素
+
+
+Merge
+
+df = df1.append(df2)    #合并表df1和df2，df1与df2格式必须相同
+#创建一列数据，再把这列数据插进去
+series1 = np.random.randint(1,high=10,size=10,dtype='1')
+df['新列'] = series
+df = pd.concat([df1,df2])   #合并df1和df2
+df = pd.concat([df1,df2],axis=1)  #沿着列合并df1和df2
+pd.merge(df1,df2,on = '公共列')  #这边有点像sql里面的inner join将两张表连接在一起
+pd.merge(df1,df2,on = '公共列',how = 'inner')  #这边就很明显了就是inner join
+pd.merge(df1,df2,on = '公共列',how = 'outer')  #这边就是sql里面的outer join
+
+Stats
+df[df.column == df.column.min()]  #查找出现次数最少的
+df.column.std()   #求column列的标准差
+
+
+Visualize
+fig = plt.figure(figsize=(12,4)   #拉长画布
+plt.tick_params(axis='x',labelsize=8)  #调整标签字体大小
+plt.barh(df['column1'],df['column2'])  #绘制横向柱状图   
+plt.xticks(rotation=-15)   #设置x轴标签旋转角度
+
+
+
+#散点图
+plt.scatter(x=df.column1,y=df.column2,s = 点的大小,c = 点的颜色)
+plt.xlabel('x轴标签')
+plt.ylabel('y轴标签')
+plt.title('图的标题')
+plt.show() 
+
+
+Creating_Series_and_DataFrames
+raw_data = {
+			"column1":['','',''],
+			"column2":{'','',''}
+				}
+df = pd.DataFrame(raw_data)
+
+df = df[['column2','column1']]    #更改column顺序
+
+
+
+高级用法
+resample()函数
+df2 = df.resample('10AS').sum()               #求频率为10年的数据求和
+df2.num = df.resample('10AS')['num'].max()	  #特征num求最大值
+
+df2.idxmax(0)   #根据索引列看每个column指标最大的时候对应哪个索引
+
+#取出标签中的数字并改名
+data['stars'] = data['comment_star'].str.findall(r'\d+').str.get(0)
+
